@@ -2,13 +2,12 @@
 session_start();
 include '../includes/config.php';
 
-// Check if user is an Archmage
-if ($_SESSION['level'] !== 'Archmage') {
+if ($_SESSION['level'] !== 'archmage') {
     header("Location: home.php");
     exit;
 }
 
-// Get promotion request details
+// promotion request details
 $promotion_id = $_GET['promotion_id'];
 $query = "SELECT pl.player_id, pl.username, pl.email, pl.level, pl.magic_class, pl.created_at, p.new_level FROM promotions p JOIN players pl ON p.promoted_player = pl.player_id WHERE p.promotion_id = ?";
 $stmt = $conn->prepare($query);
@@ -19,25 +18,54 @@ $player = $result->fetch_assoc();
 $stmt->close();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $reviewed = $_POST['action'] === 'approve' ? 1 : -1;
-    $comment = $_POST['comment'];
+    $reviewed = ($_POST['action'] === 'approve') ? 1 : -1;
+    $comment = trim($_POST['comment']);
 
-    // Update promotion status and comment
     $stmt = $conn->prepare("UPDATE promotions SET reviewed = ?, comment = ? WHERE promotion_id = ?");
     $stmt->bind_param("isi", $reviewed, $comment, $promotion_id);
     $stmt->execute();
     $stmt->close();
 
-    // If approved, update player's level
+    $to = $player['email'];
+    $subject = "Stormwind Library - Promotion Review";
+    $headers = "From: no-reply@captaindan1944.com\r\n";
+    $headers .= "Reply-To: no-reply@captaindan1944.com\r\n";
+    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+
     if ($reviewed === 1) {
+        // update
         $new_level = $player['new_level'];
         $player_id = $player['player_id'];
         $stmt = $conn->prepare("UPDATE players SET level = ? WHERE player_id = ?");
         $stmt->bind_param("si", $new_level, $player_id);
         $stmt->execute();
         $stmt->close();
+
+        // Approval Email
+        $body = "
+            <h2>Congratulations, {$player['username']}!</h2>
+            <p>Your promotion request has been <strong style='color:green;'>APPROVED</strong>!</p>
+            <p>You are now a <strong>{$new_level}</strong> in the Stormwind Library.</p>
+            <p><em>Comment from the Archmage:</em> <br> {$comment}</p>
+            <p>Best regards,<br>Stormwind Library</p>
+        ";
+    } else {
+        // Disapproval Email
+        $body = "
+            <h2>Hello, {$player['username']}</h2>
+            <p>Your promotion request has been <strong style='color:red;'>DISAPPROVED</strong>.</p>
+            <p><em>Reason:</em> <br> {$comment}</p>
+            <p>Keep practicing and try again in the future!</p>
+            <p>Best regards,<br>Stormwind Library</p>
+        ";
     }
 
+    if (mail($to, $subject, $body, $headers)) {
+        $_SESSION['message'] = "<span class='text-green-400 font-bold'>Email sent successfully to {$player['username']}!</span>";
+    } else {
+        $_SESSION['message'] = "<span class='text-red-400 font-bold'>Failed to send email notification.</span>";
+    }
+    
     header("Location: home.php");
     exit;
 }

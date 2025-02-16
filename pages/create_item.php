@@ -23,13 +23,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $uploadOk = 1;
     $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
 
-    // Check if image file is a actual image or fake image
     $check = getimagesize($_FILES["image"]["tmp_name"]);
     if ($check === false) {
         $uploadOk = 0; 
     }
 
-    // Check if file already exists
+    // file already exists
     if (file_exists($target_file)) {
         $uploadOk = 1;
     }
@@ -38,12 +37,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $uploadOk = 0; 
     }
 
-    // Allow certain file formats
     if (!in_array($imageFileType, ['jpg', 'png', 'jpeg', 'gif'])) {
         $uploadOk = 0; 
     }
 
-    // Check if $uploadOk is set to 0 by an error
     if ($uploadOk == 0) {
     } else {
         if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {

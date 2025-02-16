@@ -32,7 +32,7 @@ $stmt->close();
 
 // Fetch promotion requests if user is an Archmage
 $requests = [];
-if ($user['level'] === 'Archmage') {
+if ($user['level'] === 'archmage') {
     $query = "SELECT p.promotion_id, pl.username, pl.level 
               FROM promotions p 
               JOIN players pl ON p.promoted_player = pl.player_id 
@@ -48,14 +48,40 @@ if ($user['level'] === 'Archmage') {
 // Fetch upcoming trainings for the user
 $upcoming_trainings = [];
 $query = "SELECT t.title, t.start_time 
-          FROM training_sessions t 
-          WHERE t.start_time > NOW() 
+          FROM training_sessions t
+          LEFT JOIN training_participants tp ON t.training_id = tp.training_id AND tp.player_id = ?
+          WHERE (tp.player_id IS NOT NULL OR t.trainer_id = ?) 
+          AND t.start_time > NOW()
           ORDER BY t.start_time ASC";
 $stmt = $conn->prepare($query);
+$stmt->bind_param("ii", $user_id, $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $upcoming_trainings = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
+
+
+$message = "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $name = htmlspecialchars($_POST["name"]);
+    $email = htmlspecialchars($_POST["email"]);
+    $message = htmlspecialchars($_POST["message"]);
+    $to = "headquarters@captaindan1944.com";
+    $subject = "New Message from Stormwind Library";
+    $headers = "From: $email\r\nReply-To: $email\r\nContent-Type: text/plain; charset=UTF-8";
+
+    $body = "Name: $name\nEmail: $email\n\nMessage:\n$message";
+
+    if (mail($to, $subject, $body, $headers)) {
+        $message = "<span class='text-green-400 font-bold'>Message sent successfully!</span>";
+    } else {
+        $message = "<span class='text-red-400 font-bold'>Failed to send message. Please try again.</span>";
+    }
+}
+
+
+
 ?>
 
 <!DOCTYPE html>
@@ -118,7 +144,7 @@ $stmt->close();
             </div>
         <?php endif; ?>
 
-        <?php if ($user['level'] === 'Archmage' && !empty($requests)): ?>
+        <?php if ($user['level'] === 'archmage' && !empty($requests)): ?>
             <div class="bg-gray-800 p-4 rounded-lg shadow-lg mb-6" style="max-width: 20vw;">
                 <h3 class="text-xl font-bold mb-4">Promotion Requests</h3>
                 <ul>
@@ -151,18 +177,21 @@ $stmt->close();
 
         <div class="flex flex-col items-center mt-8">
             <h2 class="text-2xl font-bold mb-4">Contact The Librarian</h2>
-            <form action="send_email.php" method="POST" class="bg-gray-800 p-4 rounded-lg shadow-lg mb-6 w-full max-w-md">
+            
+            <p class="mb-4"><?php echo $message; ?></p>
+            
+            <form action="" method="POST" class="bg-gray-800 p-4 rounded-lg shadow-lg mb-6 w-full max-w-md">
                 <div class="mb-4">
                     <label for="name" class="block text-sm font-bold mb-2">Name:</label>
-                    <input type="text" id="name" name="name" required class="w-full p-2 border border-gray-600 rounded">
+                    <input type="text" id="name" name="name" required class="w-full p-2 border border-gray-600 rounded text-black">
                 </div>
                 <div class="mb-4">
                     <label for="email" class="block text-sm font-bold mb-2">Email:</label>
-                    <input type="email" id="email" name="email" required class="w-full p-2 border border-gray-600 rounded">
+                    <input type="email" id="email" name="email" required class="w-full p-2 border border-gray-600 rounded text-black">
                 </div>
                 <div class="mb-4">
                     <label for="message" class="block text-sm font-bold mb-2">Message:</label>
-                    <textarea id="message" name="message" required class="w-full p-2 border border-gray-600 rounded" rows="4"></textarea>
+                    <textarea id="message" name="message" required class="w-full p-2 border border-gray-600 rounded text-black" rows="4"></textarea>
                 </div>
                 <button type="submit" class="bg-blue-500 text-white p-2 rounded">Send Message</button>
             </form>

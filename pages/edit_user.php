@@ -2,18 +2,15 @@
 session_start();
 include '../includes/config.php';
 
-// Check if the user is an admin
 if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] != 1) {
     header("Location: login.php");
     exit;
 }
 
-// Initialize variables
 $userId = $_GET['user_id'] ?? null;
 $user = [];
 $users = [];
 
-// Fetch user details if userId is set
 if ($userId) {
     $userQuery = "SELECT username, email, level, magic_class, gold_coins, is_admin FROM players WHERE player_id = ?";
     $stmt = $conn->prepare($userQuery);
@@ -23,14 +20,13 @@ if ($userId) {
     $user = $result->fetch_assoc();
     $stmt->close();
 
-    // Check if user was found
     if (!$user) {
         echo "<script>alert('User not found!'); window.location.href='admin.php';</script>";
         exit;
     }
 }
 
-// Handle user search
+// User search
 if (isset($_POST['search_user'])) {
     $searchUsername = $_POST['search_username'];
     $searchQuery = "SELECT player_id, username FROM players WHERE username LIKE ?";
@@ -43,7 +39,7 @@ if (isset($_POST['search_user'])) {
     $stmt->close();
 }
 
-// Handle user update
+// User update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
     $newUsername = $_POST['username'];
     $newEmail = $_POST['email'];
@@ -61,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
     echo "<script>alert('User details updated successfully!'); window.location.href='admin.php';</script>";
 }
 
-// Handle user deletion
+// User deletion
 if (isset($_POST['delete_user'])) {
     $deleteQuery = "DELETE FROM players WHERE player_id = ?";
     $stmt = $conn->prepare($deleteQuery);
@@ -72,7 +68,6 @@ if (isset($_POST['delete_user'])) {
     echo "<script>alert('User deleted successfully!'); window.location.href='admin.php';</script>";
 }
 
-// Display user details safely
 $username = htmlspecialchars($user['username'] ?? '');
 $email = htmlspecialchars($user['email'] ?? '');
 $level = htmlspecialchars($user['level'] ?? '');

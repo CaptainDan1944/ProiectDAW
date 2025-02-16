@@ -6,7 +6,7 @@ include '../includes/config.php';
 $query = "SELECT ts.training_id, ts.title, ts.level, p.username AS trainer, p.magic_class AS trainer_class FROM training_sessions ts JOIN players p ON ts.trainer_id = p.player_id";
 $result = $conn->query($query);
 
-$isMageOrArchmage = isset($_SESSION['level']) && ($_SESSION['level'] == 'Mage' || $_SESSION['level'] == 'Archmage' || $_SESSION['is_admin'] == '1');
+$isMageOrArchmage = isset($_SESSION['level']) && ($_SESSION['level'] == 'mage' || $_SESSION['level'] == 'archmage' || $_SESSION['is_admin'] == '1');
 
 ?>
 
@@ -45,7 +45,7 @@ $isMageOrArchmage = isset($_SESSION['level']) && ($_SESSION['level'] == 'Mage' |
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
             <?php while ($row = $result->fetch_assoc()): ?>
                 <?php
-                    // Determine the prefix based on the level
+                    // Determine prefix
                     $level = strtolower($row['level']);
                     $prefix = '';
                     switch ($level) {

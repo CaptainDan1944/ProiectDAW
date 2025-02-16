@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['level']) || 
-    (!in_array($_SESSION['level'], ['Mage', 'Archmage']) && $_SESSION['is_admin'] != '1')) {
+    (!in_array($_SESSION['level'], ['mage', 'archmage']) && $_SESSION['is_admin'] != '1')) {
     header("Location: trainings.php");
     exit;
 }
@@ -26,6 +26,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo "Error: " . $stmt->error;
     }
     $stmt->close();
+    header("Location: trainings.php");
+    exit;
 }
 ?>
 

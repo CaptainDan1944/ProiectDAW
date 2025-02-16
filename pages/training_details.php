@@ -21,7 +21,7 @@ $stmt->execute();
 $result = $stmt->get_result();
 $training = $result->fetch_assoc();
 
-// Fetch user level
+
 $query = "SELECT level FROM players WHERE player_id = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $userId);
@@ -29,7 +29,7 @@ $stmt->execute();
 $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 
-// Check if user is already registered
+// user is already registered
 $query = "SELECT * FROM training_participants WHERE training_id = ? AND player_id = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("ii", $trainingId, $userId);

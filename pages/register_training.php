@@ -10,7 +10,7 @@ $userId = $_SESSION['player_id'] ?? null;
 $response = ['success' => false];
 
 if ($trainingId && $userId) {
-    // Check if the user is already registered
+    // user already registered
     $checkQuery = "SELECT * FROM training_participants WHERE training_id = ? AND player_id = ?";
     $checkStmt = $conn->prepare($checkQuery);
     $checkStmt->bind_param("ii", $trainingId, $userId);

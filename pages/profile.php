@@ -9,7 +9,6 @@ if (!isset($_SESSION['player_id'])) {
     exit;
 }
 
-// Retrieve user data from the database
 $user_id = $_SESSION['player_id'];
 $query = "SELECT username, email, level, magic_class, created_at FROM players WHERE player_id = ?";
 $stmt = $conn->prepare($query);
@@ -19,7 +18,7 @@ $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 $stmt->close();
 
-// Check for existing promotion request
+// promotion request
 $pending_request = false;
 $check_query = "SELECT COUNT(*) as count FROM promotions WHERE promoted_player = ? AND reviewed = 0";
 $check_stmt = $conn->prepare($check_query);
@@ -40,7 +39,7 @@ $archmage_result = $archmage_stmt->get_result();
 $archmages = $archmage_result->fetch_all(MYSQLI_ASSOC);
 $archmage_stmt->close();
 
-// Handle promotion request
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['request_promotion']) && !$pending_request) {
     if (empty($_POST['archmage_id'])) {
         echo "<p class='text-red-500'>Please select an Archmage to handle your request!</p>";
@@ -87,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['request_promotion']) &
         <div class="bg-gray-800 p-4 rounded-lg shadow-lg" style="width: 30%; margin-bottom: 4vh;">
             <p><strong>Username:</strong> <?php echo htmlspecialchars($user['username']); ?></p>
             <p><strong>Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
-            <p><strong>Level:</strong> <?php echo htmlspecialchars($user['level']); ?></p>
+            <p><strong>Level:</strong> <?php echo htmlspecialchars(ucfirst($user['level'])); ?></p>
             <p><strong>Class:</strong> <?php echo htmlspecialchars(ucfirst($user['magic_class'])); ?></p>
             <p><strong>Joined:</strong> <?php echo htmlspecialchars($user['created_at']); ?></p>
         </div>

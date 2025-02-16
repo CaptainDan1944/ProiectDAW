@@ -21,7 +21,7 @@ if (isset($_SESSION['player_id'])) {
     $stmt->close();
 }
 
-// Fetch item details
+
 $query = "SELECT * FROM items WHERE item_id = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $itemId);
@@ -29,7 +29,7 @@ $stmt->execute();
 $item = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-// Determine border class based on rarity
+// border class based on rarity
 $borderClass = '';
 switch (strtolower($item['rarity'])) {
     case 'common':
@@ -46,7 +46,6 @@ switch (strtolower($item['rarity'])) {
         break;
 }
 
-// Define level hierarchy
 $levelHierarchy = [
     'apprentice' => 1,
     'adept' => 2,
@@ -54,12 +53,12 @@ $levelHierarchy = [
     'archmage' => 4
 ];
 
-// Handle form submission for buying an item
+// Buying an item
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['buy'])) {
     if ($item['stock'] <= 0) {
         echo "<script>alert('This item is out of stock.');</script>";
     } else {
-        // Fetch player's level
+
         $levelQuery = "SELECT level FROM players WHERE player_id = ?";
         $stmt = $conn->prepare($levelQuery);
         $stmt->bind_param("i", $playerId);
@@ -68,18 +67,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['buy'])) {
         $stmt->fetch();
         $stmt->close();
 
-        // Convert levels to lowercase for comparison
+
         $playerLevel = strtolower($playerLevel);
         $requiredLevel = strtolower($item['required_level']);
 
-        // Check if player meets the level requirement
         if ($levelHierarchy[$playerLevel] < $levelHierarchy[$requiredLevel]) {
             echo "<script>alert('You do not meet the required level to buy this item.');</script>";
         } elseif ($goldCoins < $item['price']) {
-            // Check if player has enough gold
             echo "<script>alert('You do not have enough gold to buy this item.');</script>";
         } else {
-            // Deduct gold and add item to inventory
             $conn->begin_transaction();
 
             try {
@@ -107,9 +103,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['buy'])) {
     }
 }
 
-// Handle form submission for borrowing an item
+
+$loreDescription = "";
+if ($item['lore_accurate'] == 1) {
+    $wikiPage = "https://wowpedia.fandom.com/wiki/" . urlencode($item['name']);
+    
+    $wikiHtml = @file_get_contents($wikiPage);
+
+    if ($wikiHtml !== false) {
+        // DOM parser
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML($wikiHtml);
+        libxml_clear_errors();
+
+        // Extract first paragraph
+        $xpath = new DOMXPath($dom);
+        $paragraphs = $xpath->query("//div[@class='mw-parser-output']/p");
+
+        if ($paragraphs->length > 0) {
+            $loreDescription = trim($paragraphs->item(0)->nodeValue);
+        }
+    }
+}
+
+
+// Borrowing an item
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['borrow'])) {
-    // Fetch player's level
+
     $levelQuery = "SELECT level FROM players WHERE player_id = ?";
     $stmt = $conn->prepare($levelQuery);
     $stmt->bind_param("i", $playerId);
@@ -118,11 +139,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['borrow'])) {
     $stmt->fetch();
     $stmt->close();
 
-    // Convert levels to lowercase for comparison
     $playerLevel = strtolower($playerLevel);
     $requiredLevel = strtolower($item['required_level']);
 
-    // Check if player meets the level requirement
     if ($levelHierarchy[$playerLevel] < $levelHierarchy[$requiredLevel]) {
         echo "<script>alert('You do not meet the required level to borrow this item.');</script>";
     } else {
@@ -213,7 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['borrow'])) {
         </div>
     </nav>
     <div class="p-6 mx-auto mt-16 flex justify-center" style="max-width: 86%;">
-        <div class="bg-gray-800 p-4 rounded-lg shadow-lg flex flex-col items-center" style="max-width: 24vw;">
+        <div class="bg-gray-800 p-4 rounded-lg shadow-lg flex flex-col items-center" style="max-width: 24vw; min-width: 18vw;">
             <h2 class="text-2xl font-bold mb-4 text-center"><?php echo htmlspecialchars($item['name']); ?></h2>
             <div class="w-48 h-48 relative overflow-hidden border-2 rounded-lg <?php echo $borderClass; ?> mx-auto mb-4">
                 <img src="<?php echo $item['image_path']; ?>" alt="<?php echo $item['name']; ?>" class="w-full h-full object-cover">
@@ -238,6 +257,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['borrow'])) {
                 <?php endif; ?>
             </form>
         </div>
+
+        <?php if (!empty($loreDescription)): ?>
+            <div class="bg-gray-800 p-2 rounded-lg shadow-lg mt-8 w-1/3 ml-10">
+                <h3 class="text-xl font-bold mb-2">Lore Description</h3>
+                <p class="text-gray-300"><?php echo htmlspecialchars($loreDescription); ?></p>
+                <p class="text-blue-400 text-sm mt-2"><a href="https://wowpedia.fandom.com/wiki/<?php echo urlencode($item['name']); ?>" target="_blank">Read more on Wowpedia</a></p>
+            </div>
+        <?php endif; ?>
     </div>
 </body>
 </html> 

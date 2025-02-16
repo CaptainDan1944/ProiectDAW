@@ -10,7 +10,7 @@ $userId = $_SESSION['player_id'] ?? null;
 $response = ['success' => false];
 
 if ($trainingId && $userId) {
-    // Check if the user is the creator
+    // user is the creator
     $checkQuery = "SELECT trainer_id FROM training_sessions WHERE training_id = ?";
     $checkStmt = $conn->prepare($checkQuery);
     $checkStmt->bind_param("i", $trainingId);

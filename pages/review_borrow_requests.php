@@ -2,7 +2,6 @@
 session_start();
 include '../includes/config.php';
 
-// Check if the user is an admin
 if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] != 1) {
     header("Location: login.php");
     exit;
@@ -21,73 +20,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $requestId = $_POST['request_id'];
     $action = $_POST['action'];
 
-    if ($action === 'accept') { // accept request
-        $updateQuery = "UPDATE borrowed_items SET status = 'accepted' WHERE borrow_id = ?";
-        if (isset($updateQuery)) {
-            $stmt = $conn->prepare($updateQuery);
-            $stmt->bind_param("i", $requestId);
-            $stmt->execute();
-            $stmt->close();
-        }
+    $query = "SELECT p.email, p.username, i.name AS item_name, bi.borrow_date, bi.return_date 
+              FROM borrowed_items bi 
+              JOIN players p ON bi.player_id = p.player_id 
+              JOIN items i ON bi.item_id = i.item_id 
+              WHERE bi.borrow_id = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $requestId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $emailData = $result->fetch_assoc();
+    $stmt->close();
 
-        //     // Fetch user email and item details for the email
-        //     $emailQuery = "SELECT p.email, p.username, i.name AS item_name, bi.borrow_date, bi.return_date 
-        //                 FROM borrowed_items bi 
-        //                 JOIN players p ON bi.player_id = p.player_id 
-        //                 JOIN items i ON bi.item_id = i.item_id 
-        //                 WHERE bi.borrow_id = ?";
-        //     $emailStmt = $conn->prepare($emailQuery);
-        //     $emailStmt->bind_param("i", $requestId);
-        //     $emailStmt->execute();
-        //     $emailResult = $emailStmt->get_result();
-        //     $emailData = $emailResult->fetch_assoc();
-
-        //     // Send confirmation email
-        //     $to = $emailData['email'];
-        //     $subject = "Borrow Request Accepted";
-        //     $message = "Hello, {$emailData['username']}!\n\nYour request to borrow '{$emailData['item_name']}' has been accepted.\nBorrow Date: {$emailData['borrow_date']}\nReturn Date: {$emailData['return_date']}\n\nThank you!";
-        //     $headers = "From: headquarters@captaindan1944.com\r\n"; // Replace with your email
-
-        //     // Send the email
-        //     if (mail($to, $subject, $message, $headers)) {
-        //         echo "Email sent successfully.";
-        //     } else {
-        //         echo "Email sending failed.";
-        //     }
-        // }
-    } elseif ($action === 'refuse') {  // refuse request
-        $updateQuery = "UPDATE borrowed_items SET status = 'refused' WHERE borrow_id = ?";
-        if (isset($updateQuery)) {
-            $stmt = $conn->prepare($updateQuery);
-            $stmt->bind_param("i", $requestId);
-            $stmt->execute();
-            $stmt->close();
-        }
-    } elseif ($action === 'borrow') {  // player has borrowed the item
-        $updateQuery = "UPDATE borrowed_items SET status = 'borrowed' WHERE borrow_id = ?";
-        if (isset($updateQuery)) {
-            $stmt = $conn->prepare($updateQuery);
-            $stmt->bind_param("i", $requestId);
-            $stmt->execute();
-            $stmt->close();
-        }
-    } elseif ($action === 'cancel') {  // cancel the request
-        $updateQuery = "UPDATE borrowed_items SET status = 'cancelled' WHERE borrow_id = ?";
-        if (isset($updateQuery)) {
-            $stmt = $conn->prepare($updateQuery);
-            $stmt->bind_param("i", $requestId);
-            $stmt->execute();
-            $stmt->close();
-        }
-    } elseif ($action === 'returned') {  // item has been returned
-        $updateQuery = "UPDATE borrowed_items SET status = 'returned', actual_return_date = NOW() WHERE borrow_id = ?";
-        if (isset($updateQuery)) {
-            $stmt = $conn->prepare($updateQuery);
-            $stmt->bind_param("i", $requestId);
-            $stmt->execute();
-            $stmt->close();
-        }
+    if (!$emailData) {
+        exit("Borrow request not found.");
     }
+
+    $to = $emailData['email'];
+    $username = $emailData['username'];
+    $item_name = $emailData['item_name'];
+    $borrow_date = date('Y-m-d', strtotime($emailData['borrow_date']));
+    $return_date = date('Y-m-d', strtotime($emailData['return_date']));
+    $subject = "";
+    $message = "";
+
+    if ($action === 'accept') {
+        $updateQuery = "UPDATE borrowed_items SET status = 'accepted' WHERE borrow_id = ?";
+        $subject = "Borrow Request Approved";
+        $message = "Hello $username,\n\nYour request to borrow '$item_name' has been APPROVED.\n\nBorrow Date: $borrow_date\nReturn Date: $return_date\n\nThank you!";
+    
+    } elseif ($action === 'refuse') {
+        $updateQuery = "UPDATE borrowed_items SET status = 'refused' WHERE borrow_id = ?";
+        $subject = "Borrow Request Rejected";
+        $message = "Hello $username,\n\nUnfortunately, your request to borrow '$item_name' has been REJECTED.\n\nYou may try again later.\nThank you for understanding.";
+
+    } elseif ($action === 'borrow') {
+        $updateQuery = "UPDATE borrowed_items SET status = 'borrowed' WHERE borrow_id = ?";
+        $subject = "Item Borrowed";
+        $message = "Hello $username,\n\nYou have successfully BORROWED '$item_name'.\n\nReturn Date: $return_date\nPlease return it on time.";
+
+    } elseif ($action === 'cancel') {
+        $updateQuery = "UPDATE borrowed_items SET status = 'cancelled' WHERE borrow_id = ?";
+        $subject = "Borrow Request Cancelled";
+        $message = "Hello $username,\n\nYour borrow request for '$item_name' has been CANCELLED.\n\nIf this was a mistake, please request again.";
+
+    } elseif ($action === 'returned') {
+        $updateQuery = "UPDATE borrowed_items SET status = 'returned', actual_return_date = NOW() WHERE borrow_id = ?";
+        $subject = "Item Returned";
+        $message = "Hello $username,\n\nThank you for returning '$item_name'.\n\nYour borrow request has been marked as RETURNED.";
+    }
+
+    if (isset($updateQuery)) {
+        $stmt = $conn->prepare($updateQuery);
+        $stmt->bind_param("i", $requestId);
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    // Send email notification
+    $headers = "From: no-reply@captaindan1944.com\r\n";
+    $headers .= "Reply-To: no-reply@captaindan1944.com\r\n";
+    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+
+    mail($to, $subject, $message, $headers);
 
     header("Location: review_borrow_requests.php");
     exit;

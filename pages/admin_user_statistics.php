@@ -13,14 +13,14 @@ $result = $conn->query($totalVisitorsQuery);
 $row = $result->fetch_assoc();
 $total_visitors = $row['total_visitors'];
 
-// Fetch user statistics from the database
+// user statistics
 $userStatisticsQuery = "SELECT username, COUNT(borrow_id) AS borrow_count FROM borrowed_items 
                         JOIN players ON borrowed_items.player_id = players.player_id 
                         GROUP BY username";
 $result = $conn->query($userStatisticsQuery);
 $user_statistics = $result->fetch_all(MYSQLI_ASSOC);
 
-// Fetch user statistics by magic class
+// by magic class
 $magicClassQuery = "SELECT magic_class, COUNT(*) AS class_count FROM players GROUP BY magic_class";
 $magicClassResult = $conn->query($magicClassQuery);
 $magic_classes = [];
@@ -28,7 +28,7 @@ while ($row = $magicClassResult->fetch_assoc()) {
     $magic_classes[$row['magic_class']] = $row['class_count'];
 }
 
-// Prepare data for the pie chart
+// pie chart
 $labels = json_encode(array_keys($magic_classes));
 $data = json_encode(array_values($magic_classes));
 ?>
