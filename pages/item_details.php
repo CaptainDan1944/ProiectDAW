@@ -9,7 +9,6 @@ if (!$itemId) {
     exit;
 }
 
-// Fetch gold coins amount for the logged-in player
 $goldCoins = 0;
 if (isset($_SESSION['player_id'])) {
     $playerId = $_SESSION['player_id'];

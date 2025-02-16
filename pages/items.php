@@ -2,7 +2,7 @@
 session_start();
 include '../includes/config.php';
 
-// Fetch gold coins amount for the logged-in user
+
 $goldCoins = 0;
 if (isset($_SESSION['player_id'])) {
     $userId = $_SESSION['player_id'];
@@ -15,7 +15,7 @@ if (isset($_SESSION['player_id'])) {
     $stmt->close();
 }
 
-// Fetch all items from the database
+
 $query = "
     SELECT 
         i.item_id, 

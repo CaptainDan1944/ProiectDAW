@@ -3,7 +3,7 @@ session_start();
 include '../includes/config.php';
 
 $trainingId = $_GET['id'] ?? null;
-$userId = $_SESSION['player_id'] ?? null; // Assuming user ID is stored in session
+$userId = $_SESSION['player_id'] ?? null;
 
 if (!$trainingId || !$userId) {
     header("Location: trainings.php");
@@ -62,13 +62,12 @@ switch ($level) {
 $imageName = "{$prefix}{$class}Magic.png";
 $imagePath = "../resources/magic/{$imageName}";
 
-// Define levels with correct casing
 $levels = [
     'apprentice' => 1,
     'adept' => 2,
     'mage' => 3,
     'archmage' => 4,
-    'admin' => 5 // If needed
+    'admin' => 5
 ];
 
 // Fetch user level

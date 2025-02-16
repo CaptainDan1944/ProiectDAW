@@ -18,7 +18,6 @@ $result = $stmt->get_result();
 $player = $result->fetch_assoc();
 $stmt->close();
 
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $reviewed = $_POST['action'] === 'approve' ? 1 : -1;
     $comment = $_POST['comment'];

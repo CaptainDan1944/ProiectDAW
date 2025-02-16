@@ -1,5 +1,5 @@
 <?php
-include '../includes/config.php'; // Ensure this file contains the database connection
+include '../includes/config.php';
 
 session_start();
 

@@ -17,14 +17,12 @@ $query = "
     WHERE bi.status IN ('pending', 'accepted', 'borrowed')";
 $result = $conn->query($query);
 
-// Handle form submission for borrowing, cancelling, and returning
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $requestId = $_POST['request_id'];
     $action = $_POST['action'];
 
-    if ($action === 'accept') {
+    if ($action === 'accept') { // accept request
         $updateQuery = "UPDATE borrowed_items SET status = 'accepted' WHERE borrow_id = ?";
-        // Prepare and execute the update query
         if (isset($updateQuery)) {
             $stmt = $conn->prepare($updateQuery);
             $stmt->bind_param("i", $requestId);
@@ -57,36 +55,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         //         echo "Email sending failed.";
         //     }
         // }
-    } elseif ($action === 'refuse') {
+    } elseif ($action === 'refuse') {  // refuse request
         $updateQuery = "UPDATE borrowed_items SET status = 'refused' WHERE borrow_id = ?";
-        // Prepare and execute the update query
         if (isset($updateQuery)) {
             $stmt = $conn->prepare($updateQuery);
             $stmt->bind_param("i", $requestId);
             $stmt->execute();
             $stmt->close();
         }
-    } elseif ($action === 'borrow') {
+    } elseif ($action === 'borrow') {  // player has borrowed the item
         $updateQuery = "UPDATE borrowed_items SET status = 'borrowed' WHERE borrow_id = ?";
-        // Prepare and execute the update query
         if (isset($updateQuery)) {
             $stmt = $conn->prepare($updateQuery);
             $stmt->bind_param("i", $requestId);
             $stmt->execute();
             $stmt->close();
         }
-    } elseif ($action === 'cancel') {
+    } elseif ($action === 'cancel') {  // cancel the request
         $updateQuery = "UPDATE borrowed_items SET status = 'cancelled' WHERE borrow_id = ?";
-        // Prepare and execute the update query
         if (isset($updateQuery)) {
             $stmt = $conn->prepare($updateQuery);
             $stmt->bind_param("i", $requestId);
             $stmt->execute();
             $stmt->close();
         }
-    } elseif ($action === 'returned') {
+    } elseif ($action === 'returned') {  // item has been returned
         $updateQuery = "UPDATE borrowed_items SET status = 'returned', actual_return_date = NOW() WHERE borrow_id = ?";
-        // Prepare and execute the update query
         if (isset($updateQuery)) {
             $stmt = $conn->prepare($updateQuery);
             $stmt->bind_param("i", $requestId);

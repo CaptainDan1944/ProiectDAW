@@ -1,5 +1,5 @@
 <?php
-include 'includes/config.php'; // Ensure this file contains the database connection
+include 'includes/config.php';
 
 session_start();
 
@@ -15,7 +15,7 @@ if (!isset($_COOKIE['returning_visitor'])) {
     $stmt->execute();
 }
 
-// Get total unique visitors
+
 $totalVisitorsQuery = "SELECT COUNT(DISTINCT ip_address) AS total_visitors FROM site_visits";
 $result = $conn->query($totalVisitorsQuery);
 $row = $result->fetch_assoc();

@@ -1,7 +1,7 @@
 <?php
 include '../includes/config.php';
 
-$message = ""; // Initialize as empty, so no message appears before form submission
+$message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
@@ -11,7 +11,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $level = 'Apprentice'; 
     $gold_coins = 100;
 
-    // Check if username or email already exists
+
     $checkQuery = "SELECT * FROM players WHERE username = ? OR email = ?";
     $stmt = $conn->prepare($checkQuery);
     $stmt->bind_param("ss", $username, $email);
@@ -21,7 +21,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result->num_rows > 0) {
         $message = "<span class='text-red-400 font-bold'>Username or email already exists!</span>";
     } else {
-        // Insert new player
         $query = "INSERT INTO players (username, email, password, magic_class, level, gold_coins) VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($query);
         $stmt->bind_param("sssssi", $username, $email, $password, $magic_class, $level, $gold_coins);

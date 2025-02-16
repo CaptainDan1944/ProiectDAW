@@ -2,7 +2,7 @@
 session_start();
 include '../includes/config.php';
 
-// Fetch training sessions from the database
+
 $query = "SELECT ts.training_id, ts.title, ts.level, p.username AS trainer, p.magic_class AS trainer_class FROM training_sessions ts JOIN players p ON ts.trainer_id = p.player_id";
 $result = $conn->query($query);
 

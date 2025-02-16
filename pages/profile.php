@@ -2,7 +2,7 @@
 session_start();
 include '../includes/config.php';
 
-// Debugging: Check if session is set
+
 if (!isset($_SESSION['player_id'])) {
     echo "Session player_id is not set.";
     header("Location: login.php");

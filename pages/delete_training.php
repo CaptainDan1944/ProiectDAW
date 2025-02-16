@@ -31,11 +31,6 @@ if ($trainingId && $userId) {
         $deleteTrainingStmt->bind_param("i", $trainingId);
         if ($deleteTrainingStmt->execute()) {
             $response['success'] = true;
-
-            // Placeholder for sending emails
-            // foreach ($participants as $participant) {
-            //     mail($participant['email'], "Training Cancelled", "The training has been cancelled.");
-            // }
         }
     }
 }

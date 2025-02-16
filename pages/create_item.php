@@ -7,18 +7,17 @@ if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] != 1) {
 
 include '../includes/config.php';
 
-// Initialize message variable
 $message = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = $_POST['name'];
     $item_type = $_POST['item_type'];
-    $price = floatval($_POST['price']);
+    $price = intval($_POST['price']);
     $required_level = $_POST['required_level'];
     $description = $_POST['description'];
     $rarity = $_POST['rarity'];
 
-    // Handle file upload
+
     $target_dir = "../uploads/";
     $target_file = $target_dir . basename($_FILES["image"]["name"]);
     $uploadOk = 1;
@@ -27,33 +26,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Check if image file is a actual image or fake image
     $check = getimagesize($_FILES["image"]["tmp_name"]);
     if ($check === false) {
-        $uploadOk = 0; // Set uploadOk to 0 if not an image
+        $uploadOk = 0; 
     }
 
     // Check if file already exists
     if (file_exists($target_file)) {
-        $uploadOk = 0; // Prevent re-uploading the file
+        $uploadOk = 1;
     }
 
     if ($_FILES["image"]["size"] > 5000000) {
-        $uploadOk = 0; // File too large
+        $uploadOk = 0; 
     }
 
     // Allow certain file formats
     if (!in_array($imageFileType, ['jpg', 'png', 'jpeg', 'gif'])) {
-        $uploadOk = 0; // Invalid file format
+        $uploadOk = 0; 
     }
 
     // Check if $uploadOk is set to 0 by an error
     if ($uploadOk == 0) {
-        // Do not set a message here; handle it in the item creation logic
     } else {
         if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
             $image_path = $target_file;
-            // Check if the item is borrowable
+            
             $is_borrowable = isset($_POST['is_borrowable']) ? 1 : 0;
 
-            // Prepare the SQL query with the is_borrowable field
+            
             $query = "INSERT INTO items (name, item_type, price, image_path, required_level, description, rarity, is_borrowable) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($query);
             $stmt->bind_param("ssdssssi", $name, $item_type, $price, $image_path, $required_level, $description, $rarity, $is_borrowable);
@@ -61,11 +59,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($stmt->execute()) {
                 $message = "Item created successfully!";
             } else {
-                $message = "Error: " . $stmt->error; // Include error message if item creation fails
+                $message = "Error: " . $stmt->error; 
             }
             $stmt->close();
         } else {
-            $message = "Error: File upload failed."; // Set error message if file upload fails
+            $message = "Error: File upload failed."; 
         }
     }
 }
@@ -114,7 +112,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </select>
             
             <label class="block mb-2">Price</label>
-            <input type="number" step="0.01" name="price" class="w-full p-2 mb-3 bg-gray-700 border border-gray-600 rounded" required>
+            <input type="number" step="1" name="price" class="w-full p-2 mb-3 bg-gray-700 border border-gray-600 rounded" required>
             
             <label class="block mb-2">Image</label>
             <input type="file" name="image" class="w-full p-2 mb-3 bg-gray-700 border border-gray-600 rounded" required>
@@ -148,7 +146,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </form>
     </div>
 
-    <!-- Display message at the bottom -->
+
     <?php if (!empty($message)): ?>
         <div class="container mx-auto p-4">
             <div class="bg-gray-800 p-4 rounded-lg shadow-lg text-center">

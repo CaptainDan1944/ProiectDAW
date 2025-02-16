@@ -1,5 +1,5 @@
 <?php
-session_start(); // Ensure session is started
+session_start();
 include '../includes/config.php';
 
 $searchTerm = '';
@@ -19,7 +19,6 @@ if (isset($_GET['item_id'])) {
     exit;
 }
 
-// Fetch items from the database based on search term
 $query = "SELECT item_id, name FROM items WHERE name LIKE ?";
 $stmt = $conn->prepare($query);
 $searchTermWildcard = '%' . $searchTerm . '%';

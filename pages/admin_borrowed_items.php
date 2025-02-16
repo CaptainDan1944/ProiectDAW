@@ -6,7 +6,6 @@ if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] != 1) {
     exit;
 }
 
-// Handle search request
 $search_results = [];
 if (isset($_POST['search'])) {
     $player_name = $_POST['player_name'];
