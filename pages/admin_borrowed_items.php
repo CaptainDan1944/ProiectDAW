@@ -6,22 +6,18 @@ if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] != 1) {
     exit;
 }
 
-$search_results = [];
-if (isset($_POST['search'])) {
-    $player_name = $_POST['player_name'];
-    $query = "SELECT i.name AS item_name, bi.return_date 
-              FROM borrowed_items bi 
-              JOIN items i ON bi.item_id = i.item_id 
-              JOIN players p ON bi.player_id = p.player_id 
-              WHERE p.username LIKE ? AND bi.status != 'returned' 
-              ORDER BY bi.return_date ASC";
-    $stmt = $conn->prepare($query);
-    $search_param = "%" . $player_name . "%";
-    $stmt->bind_param("s", $search_param);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $search_results = $result->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
+$borrowed_items = [];
+
+$query = "SELECT bi.borrow_id, i.name AS item_name, p.username, bi.borrow_date, bi.return_date, 
+                 bi.actual_return_date, bi.status
+          FROM borrowed_items bi
+          JOIN items i ON bi.item_id = i.item_id
+          JOIN players p ON bi.player_id = p.player_id
+          ORDER BY bi.borrow_date DESC";
+
+$result = $conn->query($query);
+if ($result) {
+    $borrowed_items = $result->fetch_all(MYSQLI_ASSOC);
 }
 ?>
 
@@ -45,28 +41,49 @@ if (isset($_POST['search'])) {
             </div>
         </div>
     </nav>
-    <div class="container mx-auto p-6">
-        <h2 class="text-2xl font-bold mb-4">Search Borrowed Items</h2>
-        <form method="POST" class="mb-4">
-            <input type="text" name="player_name" placeholder="Enter player's name" class="text-black p-2 rounded" required>
-            <button type="submit" name="search" class="bg-blue-500 text-white p-2 rounded">Search</button>
-        </form>
 
-        <?php if (!empty($search_results)): ?>
-            <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
-                <h3 class="text-xl font-bold mb-4">Borrowed Items</h3>
-                <ul>
-                    <?php foreach ($search_results as $item): ?>
-                        <li class="mb-2 font-bold">
-                            <?php echo htmlspecialchars($item['item_name']); ?> - 
-                            <span class="text-green-500">
-                                Return by: <?php echo htmlspecialchars((new DateTime($item['return_date']))->format('F j')); ?>
-                            </span>
-                        </li>
+    <div class="container mx-auto p-6">
+        <h2 class="text-2xl font-bold mb-4">Borrow Requests</h2>
+
+        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-700">
+                        <th class="p-2">Player</th>
+                        <th class="p-2">Item</th>
+                        <th class="p-2">Borrowed On</th>
+                        <th class="p-2">Return By</th>
+                        <th class="p-2">Actual Return</th>
+                        <th class="p-2">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($borrowed_items as $item): ?>
+                        <tr class="border-b border-gray-600">
+                            <td class="p-2"><?php echo htmlspecialchars($item['username']); ?></td>
+                            <td class="p-2"><?php echo htmlspecialchars($item['item_name']); ?></td>
+                            <td class="p-2"><?php echo htmlspecialchars((new DateTime($item['borrow_date']))->format('F j, Y')); ?></td>
+                            <td class="p-2"><?php echo htmlspecialchars($item['return_date'] ? (new DateTime($item['return_date']))->format('F j, Y') : 'N/A'); ?></td>
+                            <td class="p-2"><?php echo $item['actual_return_date'] ? (new DateTime($item['actual_return_date']))->format('F j, Y') : '-'; ?></td>
+                            <td class="p-2 font-bold">
+                                <?php if ($item['status'] == 'accepted' && !$item['actual_return_date']): ?>
+                                    <span class="text-yellow-500">Waiting for Pickup</span>
+                                <?php elseif ($item['status'] == 'borrowed' && !$item['actual_return_date']): ?>
+                                    <span class="text-green-500">Currently Borrowed</span>
+                                <?php elseif ($item['actual_return_date']): ?>
+                                    <span class="text-blue-500">Returned</span>
+                                <?php else: ?>
+                                    <span class="text-gray-400"><?php echo htmlspecialchars($item['status']); ?></span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
-                </ul>
-            </div>
-        <?php endif; ?>
+                    <?php if (empty($borrowed_items)): ?>
+                        <tr><td colspan="6" class="text-center p-4">No borrow requests found.</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </body>
-</html> 
+</html>

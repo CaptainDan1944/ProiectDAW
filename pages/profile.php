@@ -31,7 +31,7 @@ if ($check_result->fetch_assoc()['count'] > 0) {
 $check_stmt->close();
 
 // Fetch Archmages of the same class
-$archmage_query = "SELECT player_id, username FROM players WHERE magic_class = ? AND level = 'Archmage'";
+$archmage_query = "SELECT player_id, username FROM players WHERE magic_class = ? AND level = 'archmage'";
 $archmage_stmt = $conn->prepare($archmage_query);
 $archmage_stmt->bind_param("s", $user['magic_class']);
 $archmage_stmt->execute();
@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['request_promotion']) &
             <p><strong>Joined:</strong> <?php echo htmlspecialchars($user['created_at']); ?></p>
         </div>
 
-        <?php if ($user['level'] !== 'Archmage' && !$pending_request): ?>
+        <?php if ($user['level'] !== 'archmage' && !$pending_request): ?>
             <form method="POST" class="mt-4">
                 <label for="archmage" class="block text-sm font-medium text-gray-300 mb-2">Select an Archmage to evaluate your skill and decide if you are ready to be promoted:</label>
                 <select name="archmage_id" id="archmage" class="bg-gray-700 text-white p-2 rounded mb-4" style="width: 20%;">
